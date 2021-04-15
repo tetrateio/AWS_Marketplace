@@ -74,77 +74,48 @@ Create this trust relationship on the IAM role, with these fields replaced:
 
     [https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
 
+```yaml
 
 {
-
   "Version": "2012-10-17",
-
   "Statement": [
-
     {
-
       "Effect": "Allow",
-
       "Principal": {
-
         "Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"
-
       },
-
       "Action": "sts:AssumeRoleWithWebIdentity",
-
       "Condition": {
-
         "StringEquals": {
-
           "OIDC_PROVIDER:sub": "system:serviceaccount::tsb:tsb-operator-management-plane"
-
         }
-
       }
-
     }
-
   ]
-
 }
+```
 
 For example:
 
+```yaml
 {
-
   "Version": "2012-10-17",
-
   "Statement": [
-
     {
-
       "Effect": "Allow",
-
       "Principal": {
-
         "Federated": "arn:aws:iam::111222333444:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/AAAABBBBCCCCDDDDEEEEFFFF00001111"
-
       },
-
       "Action": "sts:AssumeRoleWithWebIdentity",
-
       "Condition": {
-
         "StringEquals": {
-
           "oidc.eks.us-east-1.amazonaws.com/id/AAAABBBBCCCCDDDDEEEEFFFF00001111:sub": "system:serviceaccount::tsb:tsb-operator-management-plane"
-
         }
-
       }
-
     }
-
   ]
-
 }
-
+```
 
 ## Install the Tetrate Operator Custom Resource Definitions (CRDs)
 
@@ -154,10 +125,10 @@ Folow instruction at [https://docs.tetrate.io/service-bridge/en-us/setup/require
 
 Generate CRD for TSB Management plane per [https://docs.tetrate.io/service-bridge/en-us/setup/management-plane-installation#operator-installation](https://docs.tetrate.io/service-bridge/en-us/setup/management-plane-installation#operator-installation)
 
+```bash
 tctl install manifest management-plane-operator \
-
  --registry 709825985650.dkr.ecr.us-east-1.amazonaws.com/tetrate-io > managementplaneoperator.yaml
-
+```
 
 ## Install the Tetrate Operator
 
@@ -167,7 +138,8 @@ Update the manifest for the Tetrate Operator with your AWS Account ID:
 *   You must update `AWS_ACCOUNT_ID` (in the ServiceAccount annotation) with your account ID, so the ServiceAccount can access your AWS IAM roles
 
     Edit generated in previous step managementplaneoperator.yaml file, Sevice account definition should have added annotation part and replace AWS_ACCOUNT_ID with yours:
-    ```
+
+```yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -184,16 +156,20 @@ metadata:
 
 # Deploy the Tetrate Operator
 
+```bash
 kubectl apply -f managementplaneoperator.yaml
+```
 
 Deploying the Tetrate Operator may take a little bit of time. You can monitor its status by running this command:
 
+```bash
 kubectl -n tsb get pod -owide
+```
 
 You’re looking for the deployment to be completely up (READY of `1/1` and STATUS of `Running`):
 
 
-```
+```bash
 $ kubectl -n tsb get pod -owide
 NAME                                             READY   STATUS    RESTARTS   AGE   IP               NODE                                              NOMINATED NODE   READINESS GATES
 tsb-operator-management-plane-68c98756d5-n44d7   1/1     Running   0          71s   192.168.17.234   ip-192-168-24-207.ca-central-1.compute.internal   <none>          <none>
@@ -202,10 +178,11 @@ tsb-operator-management-plane-68c98756d5-n44d7   1/1     Running   0          71
 
 Follow Tetrate documentation on generating custom resources [https://docs.tetrate.io/service-bridge/en-us/setup/management-plane-installation#management-plane-installation](https://docs.tetrate.io/service-bridge/en-us/setup/management-plane-installation#management-plane-installation) - If everything is configured properly, the TSB Operator should see the TSB custom resources, and start creating Kubernetes Deployments, ServiceAccounts, and Secrets in the `tsb` Namespace. You can monitor this with the following:
 
+```bash
 kubectl -n tsb get all -owide
-
-
 ```
+
+```bash
 $ kubectl -n tsb get pods -owide
 NAME                                             READY   STATUS    RESTARTS   AGE   IP               NODE                                              NOMINATED NODE   READINESS GATES
 central-84dd68dc5d-x6xkm                         1/1     Running   0          59s   192.168.2.127    ip-192-168-24-207.ca-central-1.compute.internal   <none>           <none>
@@ -231,7 +208,7 @@ zipkin-5d5f8659b9-fsh44                          1/1     Running   0          85
 Obtain ELB Address by executing:
 
 
-```
+```bash
 $ kubectl -n tsb get svc -l=app=envoy
 NAME    TYPE           CLUSTER-IP       EXTERNAL-IP                                                                 PORT(S)                                         AGE
 envoy   LoadBalancer   10.100.157.254   a72dd70af1bf64e7d86a7352a9568ea1-952780637.ca-central-1.elb.amazonaws.com   8443:32457/TCP,9443:30475/TCP,42422:32238/TCP   10m
